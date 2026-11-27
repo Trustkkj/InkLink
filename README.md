@@ -19,6 +19,10 @@ InkLink turns an Android touchscreen into an absolute-position aiming device ove
 
 ![InkLink Dashboard](dashboard.png)
 
+## Live demonstration
+
+![InkLink in action](demo.gif)
+
 ## Requirements and installation
 
 Tested by the project creator on a Chromebook with Debian Linux (Crostini) and Redmi Note 12 4G. Other devices are untested. Requires Python 3, Git, ADB, Node.js 22+ and npm, and internet access for initial dependency downloads. Review `install.sh` before running it: it uses sudo for ADB and package installation, clones wosu! and installs npm dependencies. Run as your normal user, not root. Install Node.js 22+ from a trusted source first if needed (distribution packages may be older).
