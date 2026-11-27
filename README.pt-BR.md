@@ -30,3 +30,7 @@ Sem hover, pressão real de caneta, controle do cursor do sistema, suporte ao Wi
 [wosu!](https://github.com/Mostlime12195/wosu), de Mostlime12195: código MIT, recursos de mídia com licenças próprias. Não distribuímos sua árvore de código ou mídias; o instalador baixa o projeto original e aplica alterações locais. osu! é marca da ppy Pty Ltd. InkLink não é afiliado a esses projetos.
 
 O código próprio do InkLink usa a licença MIT; consulte LICENSE. Consulte THIRD_PARTY.md. Ao relatar bugs, remova números de série e dados pessoais dos logs.
+
+## Interface
+
+![Painel do InkLink](dashboard.png)
