@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$HOME/.local/share/inklink"
-echo "InkLink v0.3"
+echo "InkLink v0.3.1"
+if [[ $EUID == 0 ]]; then echo "Execute como usuário normal, não root."; exit 1; fi
+PIN=12a2bac0389c0b69287c949abb6ca8e89133ba0a
 mkdir -p "$ROOT"
 for c in adb git python3 node npm; do
  if ! command -v "$c" >/dev/null; then
@@ -13,12 +15,22 @@ done
 if ! node -e 'process.exit(Number(process.versions.node.split(".")[0])>=22?0:1)'; then
  echo 'Instale Node.js 22 ou superior antes de continuar.'; exit 1
 fi
-sudo adb start-server
-sudo adb devices
-SERIAL=$(sudo adb devices | awk '$2=="device"{print $1}')
+ADB=(adb)
+if ! adb start-server || ! adb devices | awk '$2=="device"{ok=1} END{exit !ok}'; then
+ ADB=(sudo adb)
+ sudo adb start-server
+fi
+"${ADB[@]}" devices
+SERIAL=$("${ADB[@]}" devices | awk '$2=="device"{print $1}')
 if [[ $(printf '%s\n' "$SERIAL" | grep -c . || true) != 1 ]]; then echo 'Conecte apenas um Android, compartilhe USB com Linux e autorize a depuração USB.'; exit 1; fi
-if [[ ! -d "$ROOT/wosu/.git" ]]; then git clone https://github.com/Mostlime12195/wosu.git "$ROOT/wosu"; fi
+if [[ ! -d "$ROOT/wosu/.git" ]]; then
+ git clone --no-checkout https://github.com/Mostlime12195/wosu.git "$ROOT/wosu"
+ git -C "$ROOT/wosu" checkout --detach "$PIN"
+fi
 cd "$ROOT/wosu"
+if [[ $(git rev-parse HEAD) != "$PIN" ]]; then
+ echo 'Versão do wosu! diferente da testada. Nenhum arquivo será sobrescrito.'; exit 1
+fi
 python3 - <<'PY'
 from pathlib import Path
 p=Path('src/gameplay/input/GameplayInput.ts'); s=p.read_text()
@@ -45,6 +57,11 @@ if 'inkLinkEvents' not in s:
 else:
  s=s.replace("new EventSource('http://localhost:8765/events')", "new EventSource('http://' + window.location.hostname + ':8765/events')")
  p.write_text(s)
+# Harden both existing and fresh integrations.
+s=p.read_text()
+old="            const d = JSON.parse(event.data);\n            this.inkLinkActive = d.active === true;"
+new="            let d;\n            try { d = JSON.parse(event.data); } catch { this.inkLinkActive = false; return; }\n            this.inkLinkActive = d?.active === true && Number.isFinite(d.x) && Number.isFinite(d.y) && d.x >= 0 && d.x <= 1 && d.y >= 0 && d.y <= 1;"
+if old in s: p.write_text(s.replace(old,new,1))
 PY
 python3 - <<'PY2'
 from pathlib import Path
@@ -68,6 +85,7 @@ process_lock=threading.Lock()
 game=None
 log=None
 stopping=False
+capture_process=None
 
 def stop_game():
  global game,log
@@ -101,7 +119,7 @@ def start_game():
    time.sleep(.25)
   raise RuntimeError('Jogo demorou a iniciar. Tente novamente.')
 atexit.register(stop_game)
-adb=['sudo','adb','-s',sys.argv[1],'shell']
+adb=sys.argv[2:]+['-s',sys.argv[1],'shell']
 info=subprocess.check_output(adb+['getevent','-lp'],text=True)
 candidates=[]
 for block in re.split(r'(?=add device \d+:)',info):
@@ -121,7 +139,9 @@ except (OSError,ValueError,KeyError,TypeError): pass
 model=subprocess.run(adb+['getprop','ro.product.model'],capture_output=True,text=True).stdout.strip() or 'Android'
 
 def capture():
+ global capture_process
  p=subprocess.Popen(adb+['getevent','-lt',path],stdout=subprocess.PIPE,text=True,bufsize=1)
+ capture_process=p
  slot=0; xy=[None,None]; changed=False; count=0; start=time.monotonic()
  with lock: state['connected']=True
  try:
@@ -142,13 +162,17 @@ def capture():
  finally:
   with lock: state.update(active=False,connected=False,hz=0)
 threading.Thread(target=capture,daemon=True).start()
-HTML='''<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>InkLink 0.3</title><style>
+HTML='''<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>InkLink 0.3.1</title><style>
 *{box-sizing:border-box}body{margin:0;background:#101018;color:#eee;font:15px system-ui}main{max-width:860px;margin:auto;padding:28px}header{display:flex;align-items:center;gap:14px;margin-bottom:24px}h1{margin:0;font-size:28px}small,p{color:#aaa9bd}small{font-size:12px}.logo{background:#b6a0ff;color:#181327;padding:12px;border-radius:14px;font-weight:900;font-size:24px}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.card,section{background:#1b1b29;border:1px solid #343345;border-radius:16px;padding:18px}.card strong{display:block;font-size:20px;margin-top:8px;overflow-wrap:anywhere}section{margin-top:14px}label{display:block;margin:18px 0}select,input{accent-color:#b6a0ff}select{background:#292839;color:white;padding:8px;border:1px solid #555;border-radius:8px;width:100%}input[type=range]{width:100%}output{float:right;color:#b6a0ff}#pad{position:relative;height:240px;background:#11111b;border:1px solid #46405d;border-radius:12px;overflow:hidden;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:24px 24px}#dot{position:absolute;width:14px;height:14px;background:#b6a0ff;box-shadow:0 0 16px #b6a0ff;border-radius:50%;transform:translate(-50%,-50%)}a,button{display:inline-block;background:#b6a0ff;color:#181327;padding:12px 18px;border:0;border-radius:9px;font-weight:700;text-decoration:none;cursor:pointer}button{background:#303044;color:white}footer{margin-top:18px;color:#aaa9bd;font-size:12px}@media(max-width:560px){main{padding:14px}.cards{grid-template-columns:1fr}}
-</style><main><header><div class="logo">IL</div><div><h1>InkLink <small>v0.3</small></h1><small>Your phone. Your tablet.</small></div></header><div class="cards"><div class="card"><small>Dispositivo</small><strong id="model">—</strong></div><div class="card"><small>Captura USB</small><strong id="status">Conectando</strong></div><div class="card"><small>Amostras de movimento/s</small><strong id="hz">0</strong></div></div><section><h2>Área ativa</h2><label><input id="en" type="checkbox" checked> Ativar InkLink</label><label>Orientação<select id="mode"><option value="reverse">Horizontal invertido</option><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></label><label>Largura <output id="wo">100%</output><input id="w" type="range" min="20" max="100" value="100"></label><label>Altura <output id="ho">100%</output><input id="h" type="range" min="20" max="100" value="100"></label><div id="pad"><div id="dot"></div></div><p id="save">Carregando configurações...</p><button id="reset">Restaurar padrão</button></section><section><h2>Jogar</h2><p>Use o celular para mirar e Z/X para acertar. O mouse continua disponível quando o InkLink está desativado.</p><button id="game" disabled>Iniciar osu!</button> <button id="stop">Encerrar InkLink</button><p id="launch"></p><p id="diag"></p></section><footer>InkLink • Experimental • Linux / Chromebook • Sem hover</footer></main><script>
+</style><main><header><div class="logo">IL</div><div><h1>InkLink <small>v0.3.1</small></h1><small>Your phone. Your tablet.</small></div></header><div class="cards"><div class="card"><small>Dispositivo</small><strong id="model">—</strong></div><div class="card"><small>Captura USB</small><strong id="status">Conectando</strong></div><div class="card"><small>Amostras de movimento/s</small><strong id="hz">0</strong></div></div><section><h2>Área ativa</h2><label><input id="en" type="checkbox" checked> Ativar InkLink</label><label>Orientação<select id="mode"><option value="reverse">Horizontal invertido</option><option value="horizontal">Horizontal</option><option value="vertical">Vertical</option></select></label><label>Largura <output id="wo">100%</output><input id="w" type="range" min="20" max="100" value="100"></label><label>Altura <output id="ho">100%</output><input id="h" type="range" min="20" max="100" value="100"></label><div id="pad"><div id="dot"></div></div><p id="save">Carregando configurações...</p><button id="reset">Restaurar padrão</button></section><section><h2>Jogar</h2><p>Use o celular para mirar e Z/X para acertar. O mouse continua disponível quando o InkLink está desativado.</p><button id="game" disabled>Iniciar osu!</button> <button id="stop">Encerrar InkLink</button><p id="launch"></p><p id="diag"></p></section><footer>InkLink • Experimental • Linux / Chromebook • Sem hover</footer></main><script>
 const $=id=>document.getElementById(id);let ready=false,timer; $('game').onclick=async()=>{if(!ready)return;clearTimeout(timer);$('game').disabled=true;$('launch').textContent='Iniciando jogo...';try{await save();const r=await fetch('/launch',{method:'POST'});if(!r.ok)throw Error(await r.text());location.href='http://localhost:5173'}catch(e){$('launch').textContent=e.message;$('game').disabled=false}};$('stop').onclick=async()=>{if(!confirm('Encerrar InkLink e o jogo?'))return;try{await fetch('/shutdown',{method:'POST'});$('launch').textContent='InkLink encerrado';$('game').disabled=true}catch{ $('launch').textContent='Não foi possível encerrar'}};function labels(){$('wo').value=$('w').value+'%';$('ho').value=$('h').value+'%'}function apply(c){$('mode').value=c.mode;$('w').value=Math.round(c.width*100);$('h').value=Math.round(c.height*100);$('en').checked=c.enabled;labels()}async function save(){try{const r=await fetch('/config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:$('mode').value,width:$('w').value/100,height:$('h').value/100,enabled:$('en').checked})});if(!r.ok)throw Error();$('save').textContent='Configurações salvas automaticamente'}catch{$('save').textContent='Falha ao salvar; tente novamente';throw Error('Falha ao salvar configurações')}}function update(){labels();if(!ready)return;clearTimeout(timer);timer=setTimeout(()=>save().catch(()=>{}),100)}for(const id of ['mode','w','h','en'])$(id).oninput=update;$('reset').onclick=()=>{apply({mode:'reverse',width:1,height:1,enabled:true});update()};fetch('/config').then(r=>r.json()).then(c=>{apply(c);ready=true;$('game').disabled=false;$('save').textContent='Configurações carregadas'}).catch(()=>{$('save').textContent='Falha ao carregar configurações'});const es=new EventSource('/events');es.onmessage=e=>{const d=JSON.parse(e.data);$('dot').style.left=d.x*100+'%';$('dot').style.top=d.y*100+'%';$('status').textContent=!d.connected?'Desconectado':d.active?'Ativo':$('en').checked?'Aguardando toque':'Desativado';$('hz').textContent=d.hz;$('model').textContent=d.model;$('diag').textContent=d.device+' · '+d.bounds+' · frequência de movimento, não latência';};es.onerror=()=>{$('status').textContent='Servidor offline';$('hz').textContent='0'};</script></html>'''
 class Handler(BaseHTTPRequestHandler):
  def log_message(self,*a): pass
+ def local_host(self):
+  return self.headers.get('Host') in ('localhost:8765','127.0.0.1:8765')
  def do_GET(self):
+  if not self.local_host(): self.send_error(403); return
+  if self.headers.get('Origin') not in (None,'http://localhost:8765','http://127.0.0.1:8765','http://localhost:5173','http://127.0.0.1:5173'): self.send_error(403); return
   u=urlparse(self.path)
   if u.path=='/events':
    self.send_response(200); self.send_header('Content-Type','text/event-stream'); self.send_header('Cache-Control','no-cache'); 
@@ -157,7 +181,7 @@ class Handler(BaseHTTPRequestHandler):
     self.send_header('Access-Control-Allow-Origin',origin)
    self.send_header('Vary','Origin'); self.end_headers()
    try:
-    while True:
+    while not stopping:
      with lock: d=state.copy(); c=config.copy()
      d.update(model=model,device=path,bounds=' × '.join(str(b-a) for a,b in bounds)); d['hz']=d['hz'] if time.monotonic()-d.pop('last')<1.5 else 0
      x,y=d['x'],d['y']; x,y=(y,1-x) if c['mode']=='reverse' else ((1-y,x) if c['mode']=='horizontal' else (x,y))
@@ -167,9 +191,11 @@ class Handler(BaseHTTPRequestHandler):
   elif u.path=='/config':
    with lock: data=json.dumps(config).encode()
    self.send_response(200); self.send_header('Content-Type','application/json'); self.end_headers(); self.wfile.write(data)
-  else:
-   self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.end_headers(); self.wfile.write(HTML.encode())
+  elif u.path=='/':
+   self.send_response(200); self.send_header('X-Frame-Options','DENY'); self.send_header('Content-Type','text/html; charset=utf-8'); self.end_headers(); self.wfile.write(HTML.encode())
+  else: self.send_error(404)
  def do_POST(self):
+  if not self.local_host(): self.send_error(403); return
   if self.headers.get('Origin') not in ('http://localhost:8765','http://127.0.0.1:8765'):
    self.send_error(403); return
   if self.path=='/launch':
@@ -182,6 +208,7 @@ class Handler(BaseHTTPRequestHandler):
    self.send_response(204); self.end_headers()
    threading.Thread(target=server.shutdown,daemon=True).start(); return
   if self.path!='/config': self.send_error(404); return
+  if self.headers.get('Content-Type','').split(';')[0]!='application/json': self.send_error(415); return
   try:
    n=int(self.headers.get('Content-Length','0'))
    if not 0<n<4096: raise ValueError()
@@ -196,9 +223,16 @@ server=ThreadingHTTPServer(('127.0.0.1',8765),Handler)
 def terminate(*args): raise SystemExit(0)
 signal.signal(signal.SIGTERM,terminate)
 try: server.serve_forever()
-finally: server.server_close(); stop_game()
+finally:
+ stopping=True
+ server.server_close(); stop_game()
+ if capture_process is not None and capture_process.poll() is None:
+  try:
+   capture_process.terminate(); capture_process.wait(timeout=3)
+  except subprocess.TimeoutExpired: capture_process.kill(); capture_process.wait()
+  except (ProcessLookupError,PermissionError): pass
 PY
-python3 "$ROOT/bridge.py" "$SERIAL" &
+python3 "$ROOT/bridge.py" "$SERIAL" "${ADB[@]}" &
 BRIDGE=$!
 trap 'kill "$BRIDGE" 2>/dev/null || true' EXIT
 sleep 1

@@ -8,7 +8,7 @@
 
 Transforme a tela do Android em um dispositivo de mira absoluta via USB para o wosu!, cliente não oficial de osu! no navegador. O projeto nasceu da vontade de um estudante de voltar a jogar sem comprar uma mesa digitalizadora. Desenvolvido com auxílio de IA e testes práticos.
 
-## v0.3 experimental
+## v0.3.1 experimental
 
 Detecção automática do touchscreen, ajuste de orientação e área ativa, salvamento de configurações e painel local que inicia o jogo sob demanda. A mira é manual, com Z/X para acertar as notas.
 
@@ -23,10 +23,10 @@ Testado em Chromebook com Linux Debian (Crostini) e Redmi Note 12 4G. Outros apa
 
 ## Limitações
 
-Sem hover, pressão real de caneta, controle do cursor do sistema, suporte ao Windows ou programas de desenho. Use em partidas privadas/offline; compatibilidade competitiva não verificada. Amostras/s não medem latência total. O instalador baixa a versão atual do wosu!, que pode mudar; o commit testado ainda precisa ser registrado. Baixar músicas pode exigir internet.
+Sem hover, pressão real de caneta, controle do cursor do sistema, suporte ao Windows ou programas de desenho. Use em partidas privadas/offline; compatibilidade competitiva não verificada. Amostras/s não medem latência total. O instalador fixa o wosu! no commit `12a2bac0389c0b69287c949abb6ca8e89133ba0a`, base testada na v0.3. A candidata v0.3.1 ainda requer validação em hardware. Baixar músicas pode exigir internet.
 
 ## Créditos
 
 [wosu!](https://github.com/Mostlime12195/wosu), de Mostlime12195: código MIT, recursos de mídia com licenças próprias. Não distribuímos sua árvore de código ou mídias; o instalador baixa o projeto original e aplica alterações locais. osu! é marca da ppy Pty Ltd. InkLink não é afiliado a esses projetos.
 
-A licença do código próprio do InkLink aguarda aprovação do mantenedor. Consulte THIRD_PARTY.md. Ao relatar bugs, remova números de série e dados pessoais dos logs.
+O código próprio do InkLink usa a licença MIT; consulte LICENSE. Consulte THIRD_PARTY.md. Ao relatar bugs, remova números de série e dados pessoais dos logs.

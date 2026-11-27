@@ -8,7 +8,7 @@
 
 InkLink turns an Android touchscreen into an absolute-position aiming device over USB for the unofficial browser rhythm game wosu!. It began when a student wanted to play osu! again without buying a graphics tablet. Developed with AI assistance and hands-on testing.
 
-## Experimental v0.3
+## Experimental v0.3.1
 
 - Automatic touchscreen detection via ADB
 - Adjustable active area and orientation; persistent settings
@@ -31,13 +31,13 @@ bash install.sh
 
 ## Limitations
 
-No hover, true pen pressure, system-wide cursor control, native osu! integration, Windows support or drawing application support yet. The dashboard is currently in Portuguese. Motion samples per second are not an end-to-end latency measurement. Use for offline/private play; competitive service compatibility is unverified. The installer clones the current upstream branch, which may change incompatibly. The exact tested upstream commit has not yet been recorded. The game may need network access to download beatmaps.
+No hover, true pen pressure, system-wide cursor control, native osu! integration, Windows support or drawing application support yet. The dashboard is currently in Portuguese. Motion samples per second are not an end-to-end latency measurement. Use for offline/private play; competitive service compatibility is unverified. The installer pins wosu! to `12a2bac0389c0b69287c949abb6ca8e89133ba0a`, the base tested with v0.3. The v0.3.1 release candidate still requires hardware validation. The game may need network access to download beatmaps.
 
 ## Credits and licensing
 
 [wosu!](https://github.com/Mostlime12195/wosu) by Mostlime12195 is a separate project; its code is MIT licensed, while some media have separate terms. This repository does not bundle its media or source tree; the installer fetches it from upstream and applies local integration changes. Preserve upstream license notices. osu! is a trademark of ppy Pty Ltd. InkLink is unofficial and not affiliated with either project.
 
-InkLink's own license is pending maintainer approval; do not assume redistribution permission until a license is added. See THIRD_PARTY.md.
+InkLink is licensed under MIT; see LICENSE. See THIRD_PARTY.md.
 
 ## Feedback
 
