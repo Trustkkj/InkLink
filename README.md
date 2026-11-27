@@ -42,3 +42,8 @@ InkLink is licensed under MIT; see LICENSE. See THIRD_PARTY.md.
 ## Feedback
 
 Report your Android model, Linux distribution, Chrome version, and symptoms. Remove device serials and personal information from logs before sharing.
+
+## Contributors
+
+- **[Trustkkj](https://github.com/Trustkkj)** — Founder, project direction, testing and maintenance.
+- **[ChatGPT](https://chatgpt.com/)** — AI-assisted development, architecture, debugging and documentation.
