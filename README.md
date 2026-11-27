@@ -15,7 +15,7 @@ InkLink turns an Android touchscreen into an absolute-position aiming device ove
 - Local dashboard and on-demand game launcher
 - Manual aiming only; use Z/X to hit notes
 
-- ## Preview
+## Preview
 
 ![InkLink Dashboard](dashboard.png)
 
