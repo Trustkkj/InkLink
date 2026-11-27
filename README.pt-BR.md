@@ -12,6 +12,10 @@ Transforme a tela do Android em um dispositivo de mira absoluta via USB para o w
 
 Detecção automática do touchscreen, ajuste de orientação e área ativa, salvamento de configurações e painel local que inicia o jogo sob demanda. A mira é manual, com Z/X para acertar as notas.
 
+## Interface
+
+![Painel do InkLink](dashboard.png)
+
 ## Instalação
 
 Testado em Chromebook com Linux Debian (Crostini) e Redmi Note 12 4G. Outros aparelhos ainda não foram validados. Requer Python 3, Git, ADB, Node.js 22 ou superior e npm; internet para instalação inicial. Leia o instalador antes de executar: usa sudo para ADB e pacotes, clona o wosu! e instala dependências npm. Execute como usuário normal. Caso necessário, instale Node.js 22+ de uma fonte confiável previamente.
@@ -31,6 +35,3 @@ Sem hover, pressão real de caneta, controle do cursor do sistema, suporte ao Wi
 
 O código próprio do InkLink usa a licença MIT; consulte LICENSE. Consulte THIRD_PARTY.md. Ao relatar bugs, remova números de série e dados pessoais dos logs.
 
-## Interface
-
-![Painel do InkLink](dashboard.png)
