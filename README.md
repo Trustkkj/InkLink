@@ -47,3 +47,7 @@ Report your Android model, Linux distribution, Chrome version, and symptoms. Rem
 
 - **[Trustkkj](https://github.com/Trustkkj)** — Founder, project direction, testing and maintenance.
 - **[ChatGPT](https://chatgpt.com/)** — AI-assisted development, architecture, debugging and documentation.
+
+## Preview
+
+[InkLink Dashboard](dashboard.png)
