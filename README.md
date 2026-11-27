@@ -50,4 +50,4 @@ Report your Android model, Linux distribution, Chrome version, and symptoms. Rem
 
 ## Preview
 
-[InkLink Dashboard](dashboard.png)
+[InkLink dashboard](dashboard.png)
